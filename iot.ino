@@ -3,110 +3,128 @@
 #define BLYNK_TEMPLATE_NAME "Giám sát nước sinh hoạt"
 #define BLYNK_AUTH_TOKEN "EWykw8JwlstTkurtzo6rB-GRePd7RCTi"
 
-#define BLYNK_PRINT Serial
-
 #include <WiFi.h>
 #include <BlynkSimpleEsp32.h>
 
-/********* WIFI *********/
 char ssid[] = "Jjj";
 char pass[] = "01012009";
-
-/********* UART *********/
 HardwareSerial mySerial(2);
+BlynkTimer timer;
 
-/********* BLYNK *********/
-char auth[] = BLYNK_AUTH_TOKEN;
-
-/********* DATA *********/
+/********* BIẾN DỮ LIỆU *********/
 String rxData = "";
 
-int tdsPPM = 0;        // V0
-int distanceValue = 0; // V1
-String waterText = ""; // V2
+// Thông số Cảm biến
+int tdsPPM = 0;
+float turbNTU = 0.0;
+float distanceValue = 0.0;
+String waterText = "Đang kết nối...";
 
-/********* PARSE DATA *********/
-void parseData(String s) {
+// Thông số Hệ thống mới (Theo STM32 Update)
+String simTime = "00:00";
+String simSpeed = "x1";
+String pumpStatus = "TẮT";
 
-  int p_adc = s.indexOf("ADC:");
-  int p_v   = s.indexOf(",V:");
-  int p_ppm = s.indexOf(",PPM:");
-  int p_d   = s.indexOf(",D:");
-  int p_p   = s.indexOf(",P:");
-  int p_w   = s.indexOf(",W:");
-  int p_l   = s.indexOf(",L:");
-
-  // Kiểm tra chuỗi hợp lệ
-  if (p_adc >= 0 && p_v >= 0 && p_ppm >= 0 && p_d >= 0 && p_p >= 0 && p_w >= 0 && p_l >= 0) {
-
-    /********* LẤY DỮ LIỆU *********/
-    tdsPPM = s.substring(p_ppm + 5, p_d).toInt();
-
-    String distanceStr = s.substring(p_d + 3, p_p);
-    int waterQuality   = s.substring(p_w + 3, p_l).toInt();
-
-    /********* XỬ LÝ DISTANCE *********/
-    if (distanceStr == "ERR") {
-      distanceValue = -1;
-    } else {
-      distanceValue = distanceStr.toFloat();
-    }
-
-    /********* CHUYỂN TEXT *********/
-    if (waterQuality == 0)      waterText = "SACH";
-    else if (waterQuality == 1) waterText = "CANH BAO";
-    else if (waterQuality == 2) waterText = "NGUY HIEM";
-    else                        waterText = "UNKNOWN";
-
-    /********* DEBUG SERIAL *********/
-    Serial.println("===== DATA TU STM32 =====");
-    Serial.print("PPM: "); Serial.println(tdsPPM);
-    Serial.print("Distance: "); Serial.println(distanceValue);
-    Serial.print("Water: "); Serial.println(waterText);
-    Serial.println();
-
-    /********* GỬI BLYNK *********/
-    Blynk.virtualWrite(V0, tdsPPM);
-    Blynk.virtualWrite(V1, distanceValue);
-    Blynk.virtualWrite(V2, waterText);
-
-  } else {
-    Serial.println("Sai dinh dang:");
-    Serial.println(s);
-  }
+// --- GỬI DỮ LIỆU LÊN BLYNK ĐỊNH KỲ ---
+void sendDataToBlynk() {
+  Blynk.virtualWrite(V0, tdsPPM);        // V0: TDS (Gauge)
+  Blynk.virtualWrite(V1, distanceValue); // V1: Khoảng cách (Level/Label)
+  Blynk.virtualWrite(V2, waterText);     // V2: Trạng thái nước (Label)
+  Blynk.virtualWrite(V3, turbNTU);       // V3: Độ đục (Gauge)
+  
+  // Các chân ảo mới cho Hệ thống thời gian & Bơm
+  Blynk.virtualWrite(V4, simTime);       // V4: Đồng hồ ảo (Label)
+  Blynk.virtualWrite(V5, simSpeed);      // V5: Tốc độ tua (Label)
+  Blynk.virtualWrite(V6, pumpStatus);    // V6: Trạng thái Bơm (Label/LED)
 }
 
-/********* SETUP *********/
+// --- HÀM BÓC TÁCH DỮ LIỆU CHUẨN STM32 ---
+void parseData(String s) {
+  // Chuỗi mẫu: TIME:05:58,SPEED:30.0,PPM:250,NTU:45.5,D:15.5,Q:0,F:1,H:0,S:0,P:1,PULSE:4500
+
+  // 1. Lấy Thời gian ảo (TIME)
+  int p_time = s.indexOf("TIME:");
+  if (p_time != -1) {
+    simTime = s.substring(p_time + 5, p_time + 10); // Lấy đúng 5 ký tự "HH:MM"
+  }
+
+  // 2. Lấy Tốc độ mô phỏng (SPEED)
+  int p_speed = s.indexOf(",SPEED:");
+  if (p_speed != -1) {
+    int comma = s.indexOf(',', p_speed + 1);
+    simSpeed = "x" + s.substring(p_speed + 7, comma); // Gắn thêm chữ "x" cho đẹp
+  }
+
+  // 3. Lấy TDS (PPM)
+  int p_ppm = s.indexOf(",PPM:");
+  if (p_ppm != -1) {
+    int comma = s.indexOf(',', p_ppm + 1);
+    tdsPPM = s.substring(p_ppm + 5, comma).toInt();
+  }
+
+  // 4. Lấy Độ đục (NTU)
+  int p_ntu = s.indexOf(",NTU:");
+  if (p_ntu != -1) {
+    int comma = s.indexOf(',', p_ntu + 1);
+    turbNTU = s.substring(p_ntu + 5, comma).toFloat();
+  }
+
+  // 5. Lấy Khoảng cách (D)
+  int p_d = s.indexOf(",D:");
+  if (p_d != -1) {
+    int comma = s.indexOf(',', p_d + 1);
+    String dStr = s.substring(p_d + 3, comma);
+    if (dStr == "ERR") distanceValue = -1.0;
+    else distanceValue = dStr.toFloat();
+  }
+
+  // 6. Lấy Chất lượng nước (Q) - Tin tưởng hoàn toàn vào STM32
+  int p_q = s.indexOf(",Q:");
+  if (p_q != -1) {
+    int qVal = s.substring(p_q + 3, p_q + 4).toInt();
+    if (qVal == 0)      waterText = "SẠCH";
+    else if (qVal == 1) waterText = "CẢNH BÁO";
+    else if (qVal == 2) waterText = "NGUY HIỂM";
+  }
+
+  // 7. Lấy Trạng thái Máy Bơm (P)
+  int p_p = s.indexOf(",P:");
+  if (p_p != -1) {
+    int pumpVal = s.substring(p_p + 3, p_p + 4).toInt();
+    if (pumpVal == 1) pumpStatus = "ĐANG CHẠY";
+    else pumpStatus = "TẮT";
+  }
+
+  // In ra Serial để giám sát
+  Serial.printf("[%s %s] Bơm:%s | PPM:%d | NTU:%.1f | D:%.1f | %s\n", 
+                simTime.c_str(), simSpeed.c_str(), pumpStatus.c_str(), 
+                tdsPPM, turbNTU, distanceValue, waterText.c_str());
+}
+
 void setup() {
   Serial.begin(115200);
-
-  // UART2: RX = GPIO16, TX = GPIO17
   mySerial.begin(115200, SERIAL_8N1, 16, 17);
-
-  Blynk.begin(auth, ssid, pass);
-
-  Serial.println("ESP32 + Blynk Ready");
+  
+  Blynk.begin(BLYNK_AUTH_TOKEN, ssid, pass);
+  
+  timer.setInterval(1000L, sendDataToBlynk); // Cập nhật Blynk 1 giây/lần
+  Serial.println("ESP32: Đã đồng bộ với STM32 Version Mới!");
 }
 
-/********* LOOP *********/
 void loop() {
   Blynk.run();
+  timer.run();
 
   while (mySerial.available()) {
     char c = mySerial.read();
-
+    
     if (c == '\n') {
       rxData.trim();
-
       if (rxData.length() > 0) {
-        Serial.print("Raw: ");
-        Serial.println(rxData);
         parseData(rxData);
       }
-
       rxData = "";
-    }
-    else if (c != '\r') {
+    } else if (c != '\r') {
       rxData += c;
     }
   }

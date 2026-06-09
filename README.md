@@ -1,4 +1,4 @@
-# ai-water-quality-monitoring-system
+
 # Water Quality Monitoring and Alert System
 
 An embedded IoT-based water quality monitoring system designed to collect sensor data, detect abnormal conditions, and provide real-time alerts. The project integrates multiple embedded platforms, wireless communication, and AI-assisted analysis to improve domestic water safety monitoring.

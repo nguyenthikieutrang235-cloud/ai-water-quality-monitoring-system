@@ -1,97 +1,63 @@
+# Water Quality Monitoring and Alert Systemm
+An embedded IoT system for monitoring domestic water quality and generating alerts when abnormal conditions are detected. The project combines microcontroller-based sensing, wireless communication, and system integration for real-time monitoring.
 
-# Water Quality Monitoring and Alert System
+## Overview
 
-An embedded IoT-based water quality monitoring system designed to collect sensor data, detect abnormal conditions, and provide real-time alerts. The project integrates multiple embedded platforms, wireless communication, and AI-assisted analysis to improve domestic water safety monitoring.
+This project was developed to monitor water conditions in a domestic environment using embedded devices and sensor-based data collection. The system focuses on detecting abnormal water quality indicators and sending alerts for early response.
 
-## Project Overview
+## Main Features
 
-The system continuously monitors water quality parameters using sensor nodes and processes the collected data through a distributed embedded architecture. When abnormal conditions are detected, alerts are generated to enable timely responses and preventive actions.
+- Read and process water-related sensor data
+- Monitor abnormal conditions in real time
+- Display system status locally
+- Support wireless communication for remote monitoring
+- Trigger alerts when measured values exceed safe thresholds
+- Integrate embedded sensing with AI-assisted analysis
 
-## Key Features
+## Hardware / Platforms
 
-* Real-time water quality monitoring
-* Sensor data acquisition and processing
-* Local status display via LCD
-* Wireless communication and remote monitoring
-* Threshold-based abnormal condition detection
-* Alert generation for unsafe water conditions
-* AI-assisted analysis on Raspberry Pi
+- STM32
+- ESP32
+- Raspberry Pi 5
+- Water quality sensors
+- LCD I2C display
+- Wireless communication module
+
+## Interfaces and Communication
+
+- UART
+- I2C
+- WiFi
 
 ## System Architecture
 
-### STM32
-
-* Acquires sensor data
-* Performs embedded control and preprocessing
-* Communicates with ESP32 via UART
-
-### ESP32
-
-* Provides Wi-Fi connectivity
-* Transmits data for remote monitoring
-* Acts as the IoT communication gateway
-
-### Raspberry Pi 5
-
-* Performs higher-level data processing
-* Supports AI-assisted water condition analysis
-* Handles advanced monitoring functions
-
-### LCD I2C Display
-
-* Displays sensor readings
-* Shows system status and alert information
-
-## Hardware Components
-
-* STM32 Microcontroller
-* ESP32 Development Board
-* Raspberry Pi 5
-* Water Quality Sensors
-* LCD 16x2 I2C Display
-
-## Communication Interfaces
-
-* UART
-* I2C
-* Wi-Fi
+- **STM32**: acquires sensor data and handles embedded control tasks  
+- **ESP32**: provides wireless communication and IoT connectivity  
+- **Raspberry Pi 5**: supports higher-level processing and AI-assisted analysis  
+- **LCD**: displays local system information and status  
 
 ## Development Tools
 
-* STM32CubeMX
-* Keil uVision
-* Embedded C
-* Arduino IDE
-* Python
+- STM32CubeMX
+- Keil uVision / Embedded C
+- Arduino IDE
+- Python (for AI-assisted processing if applicable)
 
-## My Contributions
+## My Responsibilities
 
-* Developed embedded firmware for sensor interfacing and data acquisition
-* Implemented communication between STM32, ESP32, and Raspberry Pi
-* Designed abnormal-condition detection and alert mechanisms
-* Performed system integration, testing, and debugging
-* Improved system stability for continuous operation
+- Developed embedded firmware for sensor data acquisition
+- Integrated communication between system modules
+- Implemented alert logic for abnormal conditions
+- Supported testing, debugging, and system integration
+- Improved system reliability for continuous monitoring
 
-## Results
+## Result
 
-The system successfully monitors water conditions, detects abnormal events, and provides real-time alerts through embedded and wireless communication technologies. The project demonstrates practical experience in:
-
-* Embedded Firmware Development
-* STM32 Programming
-* Sensor Interfacing
-* UART/I2C Communication
-* IoT System Integration
-* ESP32 Development
-* Raspberry Pi Applications
-* Real-Time Monitoring Systems
+The system can collect water-related data, detect abnormal conditions, and provide real-time alert support through embedded and wireless components. It demonstrates practical experience in firmware development, sensor interfacing, IoT communication, and multi-device integration.
 
 ## Future Improvements
 
-* Improve sensor calibration accuracy
-* Develop cloud-based monitoring dashboard
-* Add mobile application support
-* Enhance AI-based water quality classification
-* Support additional sensors and automation features
-<img width="945" height="709" alt="image" src="https://github.com/user-attachments/assets/ddbe6c33-510b-4f43-ad27-7596c522326a" />
-<img width="945" height="553" alt="image" src="https://github.com/user-attachments/assets/e1ed112f-5af5-4cc7-8487-fe86864a6418" />
-
+- Improve sensor calibration and measurement accuracy
+- Add cloud dashboard or mobile app integration
+- Optimize AI-based classification for water condition analysis
+- Expand support for more sensors and automation features
